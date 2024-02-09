@@ -1,8 +1,9 @@
-import {asyncHandler} from "../utils/asyncHandler.js";
+import {asyncHandler} from "../utils/asyncHandler.js"
 import {Apierror} from "../utils/ApiError.js"
 import { User } from "../models/user.model.js";
-import {cloudinary} from "../utils/cloudinary.js";
+import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import { Apiresponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 const registerUser  = asyncHandler(async (req,res) => {
     //get details from frontend
@@ -17,29 +18,29 @@ const registerUser  = asyncHandler(async (req,res) => {
 
 
     const {username,fullname ,email,password} = req.body
-    console.log(email);
+    // console.log(email);
 
     if(
         [fullname,email,username,password].some((field) =>
         field?.trim() === "")
     ) {
-        throw new Apierror(400,"All is required")
+        throw new Apierror(400,"All fields is required")
     }
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or:[{username},{email}]
     })
     if (existedUser) {
         throw new Apierror(409,"User already exists")
     }
-    const avatarLocalPath = req.files?avatar[0]?.path : null
+    const avatarLocalPath = req.files?avatar[0]?.path:null
     const coverImgLocalPath = req.files?coverImg[0]?.path : null
 
     if(!avatarLocalPath) {
         throw new Apierror(400,"avatar is required")
     }
 
-    const avatar = await cloudinary(avatarLocalPath)
-    const coverImg = await cloudinary(coverImgLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    const coverImg = await uploadOnCloudinary(coverImgLocalPath)
 
     if(!avatar) {
         throw new Apierror(400,"avatar is required")
