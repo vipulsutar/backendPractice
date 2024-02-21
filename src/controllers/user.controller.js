@@ -4,7 +4,8 @@ import { User } from "../models/user.model.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import { Apiresponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
-import { Jwt } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
@@ -23,8 +24,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
         // Ensure to import Apierror properly and handle the error
         throw new Apierror(500, "Something went wrong while generating refresh and access token");
     }
-};
-
+}
 
 const registerUser  = asyncHandler(async (req,res) => {
     //get details from frontend
@@ -170,6 +170,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
 })
 
+// this token is used when seesion get expired but user will not fill the details of login again  
+// the refresh token which is stored in db will try to match with access token
 const refreshAccessToken = asyncHandler(async (req,res) => {
     const incomingRefreshToken = await req.cookies.refreshToken || req.body.refreshToken
 
@@ -178,7 +180,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
     }
     
    try {
-     const decodedToken = Jwt.verify(
+     const decodedToken = jwt.verify(
          incomingRefreshToken,
          process.env.REFRESH_TOKEN_SECRET
      )
@@ -214,6 +216,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
         throw new Apierror(401,error?.message || "Invalid refresh token")
    }
 })
+
 export  {
     registerUser,
     loginUser,
